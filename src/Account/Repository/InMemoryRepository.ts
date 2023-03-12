@@ -32,4 +32,29 @@ export class InMemoryRepository implements AccountRepository {
 
 		return account
 	}
+
+	public async getById(id: AccountId): Promise<Account> {
+		const account = this.accounts.find((account: Account) => account.id.equal(id))
+
+		if (undefined === account) {
+			return await Promise.reject(new AccountNotFoundError())
+		}
+
+		return await Promise.resolve(account)
+	}
+
+	public async update(account: Account): Promise<void> {
+		const existingAccount = this.accounts.find((existingAccount: Account) => existingAccount.id.equal(account.id))
+
+		if (undefined === existingAccount) {
+			await Promise.reject(new AccountNotFoundError())
+			return
+		}
+
+		this.accounts = this.accounts.map((existingAccount: Account) =>
+			existingAccount.id.equal(account.id) ? account : existingAccount,
+		)
+
+		await Promise.resolve()
+	}
 }

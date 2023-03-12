@@ -2,6 +2,7 @@ import type { AccountRepository } from "../Account/AccountRepository"
 import { AccountNotFoundError } from "../Account/Repository/Error/AccountNotFoundError"
 import type { AccountUsername } from "../Account/AccountUsername"
 import type { AccountId } from "../Account/AccountId"
+import { AccountAlreadyActivated } from "./Error/AccountAlreadyActivated"
 
 export class SignUpHandler {
 	constructor(private readonly repository: AccountRepository) {}
@@ -13,6 +14,17 @@ export class SignUpHandler {
 			.catch(async (reason) =>
 				reason instanceof AccountNotFoundError ? await this.newAccount(username) : await Promise.reject(reason),
 			)
+	}
+
+	public async activate(id: AccountId): Promise<void> {
+		const account = await this.repository.getById(id)
+
+		if (account.isActive()) {
+			await Promise.reject(new AccountAlreadyActivated())
+			return
+		}
+
+		await this.repository.update(account.activate())
 	}
 
 	private async newAccount(email: AccountUsername): Promise<AccountId> {

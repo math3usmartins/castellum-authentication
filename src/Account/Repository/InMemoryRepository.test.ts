@@ -3,6 +3,9 @@ import "mocha"
 import { InMemoryRepository } from "./InMemoryRepository"
 import { AccountUsername } from "../AccountUsername"
 import { AccountAlreadyExists } from "./Error/AccountAlreadyExists"
+import { AccountId } from "../AccountId"
+import { Account } from "../../Account"
+import { AccountNotFoundError } from "./Error/AccountNotFoundError"
 
 describe("InMemoryRepository", () => {
 	const person = new AccountUsername("person")
@@ -14,6 +17,7 @@ describe("InMemoryRepository", () => {
 
 		assert.equal("user-1", account.id.value)
 		assert.equal(person.value, account.username.value)
+		assert.equal(account.isActive(), false)
 
 		assert.deepStrictEqual(repository, new InMemoryRepository([account]))
 	})
@@ -43,7 +47,43 @@ describe("InMemoryRepository", () => {
 		assert.equal(anotherPerson.value, account.username.value)
 	})
 
-	it("must fail when account already exists", async () => {
+	it("must get by ID", async () => {
+		const repository = new InMemoryRepository([])
+		await repository.create(person)
+		await repository.create(anotherPerson)
+
+		const account = await repository.getById(new AccountId("user-2"))
+
+		assert.equal(anotherPerson.value, account.username.value)
+	})
+
+	it("must update an account", async () => {
+		const repository = new InMemoryRepository([])
+		const account = await repository.create(person)
+
+		const anotherAccount = await repository.create(anotherPerson)
+		const activeAccount = anotherAccount.activate()
+
+		await repository.update(activeAccount)
+
+		const updatedAccount = await repository.getById(new AccountId("user-2"))
+
+		assert.equal(updatedAccount.isActive(), true)
+		assert.deepStrictEqual(repository, new InMemoryRepository([account, activeAccount]))
+	})
+
+	it("must fail to update a not existing account", async () => {
+		const repository = new InMemoryRepository([])
+
+		const failed = await repository
+			.update(new Account(new AccountId("bad-id"), new AccountUsername("bad-username")))
+			.then(() => false)
+			.catch((err) => err instanceof AccountNotFoundError)
+
+		assert.equal(failed, true)
+	})
+
+	it("must fail to signup when account already exists", async () => {
 		const repository = new InMemoryRepository([])
 		await repository.create(person)
 
