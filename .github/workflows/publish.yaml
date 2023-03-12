@@ -1,0 +1,29 @@
+name: publish
+
+on:
+    release:
+        types:
+            - published
+
+jobs:
+    publish:
+        name: publish
+        runs-on: ubuntu-latest
+        container:
+            image: node:16-alpine
+            env:
+                NODE_ENV: development
+        steps:
+            - name: checkout
+              uses: actions/checkout@v3
+
+            - name: install packages
+              run: npm ci
+
+            - name: pack files
+              run: npm pack
+
+            - name: publish package
+              run: npm publish --access=public
+              env:
+                  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

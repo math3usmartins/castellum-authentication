@@ -1,0 +1,11 @@
+version: "2.2"
+
+services:
+    authentication:
+        build:
+            dockerfile: .docker/Dockerfile
+        user: "node"
+        working_dir: /opt/castellum/authentication
+        command: npm run build
+        volumes:
+            - ./:/opt/castellum/authentication

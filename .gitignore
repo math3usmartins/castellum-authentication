@@ -1,0 +1,8 @@
+docker-compose.override.yml
+
+node_modules/
+dist/
+
+# stryker temp files
+.stryker-tmp
+reports/

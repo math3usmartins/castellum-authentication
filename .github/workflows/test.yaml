@@ -1,0 +1,31 @@
+name: test
+
+on:
+    push:
+        branches:
+            - main
+    pull_request: ~
+
+jobs:
+    test:
+        name: test
+        runs-on: ubuntu-latest
+        container:
+            image: node:16-alpine
+            env:
+                NODE_ENV: development
+        steps:
+            - name: checkout
+              uses: actions/checkout@v3
+
+            - name: install packages
+              run: npm i --no-save --ignore-scripts
+
+            - name: run tests
+              run: npm run test
+
+            - name: check formatting
+              run: npm run format-check
+
+            - name: check linting
+              run: npm run lint-check
