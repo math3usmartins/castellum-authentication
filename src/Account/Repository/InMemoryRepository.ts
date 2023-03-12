@@ -4,9 +4,10 @@ import { AccountNotFoundError } from "./Error/AccountNotFoundError"
 import { AccountId } from "../AccountId"
 import type { AccountUsername } from "../AccountUsername"
 import { AccountAlreadyExists } from "./Error/AccountAlreadyExists"
+import type { SignUpTokenGenerator } from "../../SignUp/Token/SignUpTokenGenerator"
 
 export class InMemoryRepository implements AccountRepository {
-	constructor(private accounts: Account[]) {}
+	constructor(private readonly tokenGenereator: SignUpTokenGenerator, private accounts: Account[]) {}
 
 	public async getByUsername(username: AccountUsername): Promise<Account> {
 		const account: Account | undefined = this.accounts.find((a: Account): boolean => a.username === username)
@@ -16,7 +17,7 @@ export class InMemoryRepository implements AccountRepository {
 			: await Promise.reject(new AccountNotFoundError())
 	}
 
-	public async create(username: AccountUsername): Promise<Account> {
+	public async create(username: AccountUsername, timestamp: number): Promise<Account> {
 		const alreadyExistingAccount: Account | undefined = this.accounts.find((account: Account) =>
 			account.username.equal(username),
 		)
@@ -26,7 +27,9 @@ export class InMemoryRepository implements AccountRepository {
 		}
 
 		const id = this.accounts.length + 1
-		const account = new Account(new AccountId(`user-${id}`), username)
+		const accountId = new AccountId(`user-${id}`)
+		const token = await this.tokenGenereator.generate(accountId, timestamp)
+		const account = new Account(accountId, username, token)
 
 		this.accounts = [...this.accounts, account]
 
