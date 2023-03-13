@@ -10,6 +10,16 @@
 		"!dist/**/*.test.js",
 		"!dist/**/*.test.d.ts"
 	],
+	"scripts": {
+		"build": "rm -rf dist && tsc",
+		"test": "mocha && stryker run",
+		"check": "npm run format-check && npm run lint-check",
+		"format-check": "prettier --check ./",
+		"format-fix": "prettier --write ./",
+		"lint-check": "eslint --fix-dry-run ./src",
+		"lint-fix": "eslint --fix ./src",
+		"prepublish": "npm run check && npm run test && npm run build"
+	},
 	"devDependencies": {
 		"@stryker-mutator/core": "^6.4.1",
 		"@stryker-mutator/mocha-runner": "^6.4.1",
