@@ -26,40 +26,41 @@ describe("SignUpHandler", () => {
 	it("must create account", async (): Promise<void> => {
 		const { handler } = new SignUpHandlerTestContext()
 
-		const accountId = await handler.signup(person, timestamp)
-		assert.equal("user-1", accountId.value)
+		const response = await handler.signup(person, timestamp)
+		assert.equal("user-1", response.accountId.value)
+		assert.equal("token-1", response.token.value)
 	})
 
 	it("must return existing account ID when already signed up", async (): Promise<void> => {
 		const { handler } = new SignUpHandlerTestContext()
 
-		const accountId = await handler.signup(person, timestamp)
-		assert.equal("user-1", accountId.value)
+		let response = await handler.signup(person, timestamp)
+		assert.equal("user-1", response.accountId.value)
 
-		const accountIdAgain = await handler.signup(person, timestamp)
-		assert.equal("user-1", accountIdAgain.value)
+		response = await handler.signup(person, timestamp)
+		assert.equal("user-1", response.accountId.value)
 	})
 
 	it("must activate an account", async (): Promise<void> => {
 		const { handler, repository } = new SignUpHandlerTestContext()
 
-		const accountId = await handler.signup(person, timestamp)
-		let account = await repository.getById(accountId)
+		const response = await handler.signup(person, timestamp)
+		let account = await repository.getById(response.accountId)
 		assert.equal(false, account.isActive())
 
-		await handler.activate(accountId, timestamp, "token-1")
-		account = await repository.getById(accountId)
+		await handler.activate(response.accountId, timestamp, "token-1")
+		account = await repository.getById(response.accountId)
 		assert.equal(true, account.isActive())
 	})
 
 	it("must fail to active an already activated account", async (): Promise<void> => {
 		const { handler } = new SignUpHandlerTestContext()
 
-		const accountId = await handler.signup(person, timestamp)
-		await handler.activate(accountId, timestamp, "token-1")
+		const response = await handler.signup(person, timestamp)
+		await handler.activate(response.accountId, timestamp, "token-1")
 
 		const failed = await handler
-			.activate(accountId, timestamp, "token-1")
+			.activate(response.accountId, timestamp, "token-1")
 			.then(() => false)
 			.catch((err) => err instanceof AccountAlreadyActivated)
 
